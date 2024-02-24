@@ -1,6 +1,7 @@
 package com.dex.usercenterbackend.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dex.usercenterbackend.common.BaseResponse;
 import com.dex.usercenterbackend.common.ErrorCode;
 import com.dex.usercenterbackend.common.ResultUtils;
@@ -112,6 +113,13 @@ public class UserController {
         }
 
         List<User> userList = userService.searchUsersByTags(tagNameList);
+        return ResultUtils.success(userList);
+    }
+
+    @GetMapping("/recommend")
+    public BaseResponse<Page<User>> recommendUsers(long pageSize, long pageNum, HttpServletRequest request) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        Page<User> userList = userService.page(new Page<>(pageNum, pageSize), queryWrapper);
         return ResultUtils.success(userList);
     }
 
