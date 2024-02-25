@@ -122,7 +122,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
                 <configuration>
-                    <mainClass>com.dex.usercenterbackend.UserCenterBackendApplication</mainClass>
+                    <mainClass>com.dex.youqu.YuoQuApplication</mainClass>
                     <skip>false</skip>
                 </configuration>
                 <executions>
