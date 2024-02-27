@@ -3,6 +3,7 @@ package com.dex.youqu.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dex.youqu.common.BaseResponse;
+import com.dex.youqu.common.DeleteRequest;
 import com.dex.youqu.common.ErrorCode;
 import com.dex.youqu.common.ResultUtils;
 import com.dex.youqu.exception.BusinessException;
@@ -11,7 +12,7 @@ import com.dex.youqu.model.domain.User;
 import com.dex.youqu.model.dto.TeamQuery;
 import com.dex.youqu.model.request.TeamAddRequest;
 import com.dex.youqu.model.request.TeamJoinRequest;
-import com.dex.youqu.model.request.TeamUpdateRequest;
+import com.dex.youqu.model.request.TeamQuitRequest;
 import com.dex.youqu.model.vo.TeamUserVO;
 import com.dex.youqu.service.TeamService;
 import com.dex.youqu.service.UserService;
@@ -54,33 +55,6 @@ public class TeamController {
         BeanUtils.copyProperties(teamAddRequest, team);
         long teamId = teamService.addTeam(team, loginUser);
         return ResultUtils.success(teamId);
-    }
-
-    @PostMapping("/delete")
-    public BaseResponse<Boolean> delTeam(@RequestBody long id) {
-        if (id <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-
-        boolean result = teamService.removeById(id);
-        if (!result) {
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "删除失败");
-        }
-
-        return ResultUtils.success(true);
-    }
-
-    @PostMapping("/update")
-    public BaseResponse<Boolean> updateTeam(@RequestBody TeamUpdateRequest teamUpdateRequest, HttpServletRequest request) {
-        if (teamUpdateRequest == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        User loginUser = userService.getLoginUser(request);
-        boolean result = teamService.updateTeam(teamUpdateRequest, loginUser);
-        if (!result) {
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新失败");
-        }
-        return ResultUtils.success(true);
     }
 
     @GetMapping("/get")
@@ -126,5 +100,29 @@ public class TeamController {
         User loginUser = userService.getLoginUser(request);
         boolean result = teamService.joinTeam(teamJoinRequest, loginUser);
         return ResultUtils.success(result);
+    }
+
+    @PostMapping("/quit")
+    public BaseResponse<Boolean> quitTeam(@RequestBody TeamQuitRequest teamQuitRequest, HttpServletRequest request) {
+        if (teamQuitRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.quitTeam(teamQuitRequest, loginUser);
+        return ResultUtils.success(result);
+    }
+
+    @PostMapping("/delete")
+    public BaseResponse<Boolean> deleteTeam(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
+        if (deleteRequest == null || deleteRequest.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        long id = deleteRequest.getId();
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.deleteTeam(id, loginUser);
+        if (!result) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "删除失败");
+        }
+        return ResultUtils.success(true);
     }
 }

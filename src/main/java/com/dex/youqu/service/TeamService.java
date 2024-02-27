@@ -5,6 +5,7 @@ import com.dex.youqu.model.domain.Team;
 import com.dex.youqu.model.domain.User;
 import com.dex.youqu.model.dto.TeamQuery;
 import com.dex.youqu.model.request.TeamJoinRequest;
+import com.dex.youqu.model.request.TeamQuitRequest;
 import com.dex.youqu.model.request.TeamUpdateRequest;
 import com.dex.youqu.model.vo.TeamUserVO;
 
@@ -48,7 +49,25 @@ public interface TeamService extends IService<Team> {
      *
      * @param teamJoinRequest 传入的用户加入队伍请求体
      * @param loginUser 当前登录用户信息
-     * @return
+     * @return 是否加入队伍的布尔值
      */
     boolean joinTeam(TeamJoinRequest teamJoinRequest, User loginUser);
+
+    /**
+     * 退出队伍
+     *
+     * @param teamQuitRequest 用户退出队伍请求体
+     * @param loginUser 当前登录用户信息
+     * @return 是否退出队伍的布尔值
+     */
+    boolean quitTeam(TeamQuitRequest teamQuitRequest, User loginUser);
+
+    /**
+     * 删除（解散）队伍
+     *
+     * @param id
+     * @param loginUser
+     * @return
+     */
+    boolean deleteTeam(long id, User loginUser);
 }
