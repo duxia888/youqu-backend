@@ -3,6 +3,12 @@ package com.dex.youqu.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.dex.youqu.model.domain.Team;
 import com.dex.youqu.model.domain.User;
+import com.dex.youqu.model.dto.TeamQuery;
+import com.dex.youqu.model.request.TeamJoinRequest;
+import com.dex.youqu.model.request.TeamUpdateRequest;
+import com.dex.youqu.model.vo.TeamUserVO;
+
+import java.util.List;
 
 /**
 * @author axin
@@ -13,10 +19,36 @@ public interface TeamService extends IService<Team> {
 
     /**
      * 创建队伍
-     * @param team
-     * @param loginUser
-     * @return
+     *
+     * @param team 传入的用户添加队伍信息
+     * @param loginUser 当前登录用户信息
+     * @return 队伍id
      */
     long addTeam(Team team, User loginUser);
 
+    /**
+     * 搜索队伍
+     *
+     * @param teamQuery 传入的用户查询队伍信息封装
+     * @return 搜索后队伍列表
+     */
+    List<TeamUserVO> listTeams(TeamQuery teamQuery, boolean isAdmin);
+
+    /**
+     * 更新队伍
+     *
+     * @param teamUpdateRequest 传入的用户更新队伍请求体
+     * @param loginUser 当前登录用户信息
+     * @return 是否更新成功的布尔值
+     */
+    boolean updateTeam(TeamUpdateRequest teamUpdateRequest, User loginUser);
+
+    /**
+     * 加入队伍
+     *
+     * @param teamJoinRequest 传入的用户加入队伍请求体
+     * @param loginUser 当前登录用户信息
+     * @return
+     */
+    boolean joinTeam(TeamJoinRequest teamJoinRequest, User loginUser);
 }
