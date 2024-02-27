@@ -28,7 +28,7 @@ public class SwaggerConfiguration {
                 .apiInfo(apiInfo())
                 .select()
                 //扫描路径，获取controller层的接口
-                .apis(RequestHandlerSelectors.basePackage("com.dex.usercenterbackend.controller"))
+                .apis(RequestHandlerSelectors.basePackage("com.dex.youqu.controller"))
                 .paths(PathSelectors.any())
                 .build();
     }
