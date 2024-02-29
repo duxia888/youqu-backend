@@ -88,4 +88,12 @@ public interface UserService extends IService<User> {
      * @return 是否为管理员的布尔值
      */
     boolean isAdmin(User loginUser);
+
+    /**
+     * 匹配用户
+     * @param num
+     * @param loginUser
+     * @return
+     */
+    List<User> matchUsers(long num, User loginUser);
 }
