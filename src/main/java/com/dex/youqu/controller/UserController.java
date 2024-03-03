@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.dex.youqu.contant.UserContant.USER_LOGIN_STATE;
+import static com.dex.youqu.contant.UserConstant.USER_LOGIN_STATE;
 
 /**
  * 用户接口
@@ -98,6 +98,15 @@ public class UserController {
         User user = userService.getById(userId);
         User safetyUser = userService.getSafetyUser(user);
         return ResultUtils.success(safetyUser);
+    }
+
+    @GetMapping("/{id}")
+    public BaseResponse<User> getUserById(@PathVariable("id") Integer id) {
+        if (id == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User user = this.userService.getById(id);
+        return ResultUtils.success(user);
     }
 
     @GetMapping("/search")
@@ -186,5 +195,22 @@ public class UserController {
         }
         User user = userService.getLoginUser(request);
         return ResultUtils.success(userService.matchUsers(num, user));
+    }
+
+    @GetMapping("/friends")
+    public BaseResponse<List<User>> getFriends(HttpServletRequest request) {
+        User currentUser = userService.getLoginUser(request);
+        List<User> getUser = userService.getFriendsById(currentUser);
+        return ResultUtils.success(getUser);
+    }
+
+    @PostMapping("/deleteFriend/{id}")
+    public BaseResponse<Boolean> deleteFriend(@PathVariable("id") Long id, HttpServletRequest request) {
+        if (id == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "好友不存在");
+        }
+        User currentUser = userService.getLoginUser(request);
+        boolean deleteFriend = userService.deleteFriend(currentUser, id);
+        return ResultUtils.success(deleteFriend);
     }
 }

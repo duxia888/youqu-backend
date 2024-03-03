@@ -96,4 +96,14 @@ public interface UserService extends IService<User> {
      * @return
      */
     List<User> matchUsers(long num, User loginUser);
+
+    /**
+     * 根据id获取好友列表
+     *
+     * @param currentUser
+     * @return
+     */
+    List<User> getFriendsById(User currentUser);
+
+    boolean deleteFriend(User currentUser, Long id);
 }

@@ -24,8 +24,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.dex.youqu.contant.UserContant.ADMIN_ROLE;
-import static com.dex.youqu.contant.UserContant.USER_LOGIN_STATE;
+import static com.dex.youqu.contant.UserConstant.ADMIN_ROLE;
+import static com.dex.youqu.contant.UserConstant.USER_LOGIN_STATE;
+import static com.dex.youqu.utils.StringUtils.stringJsonListToLongSet;
 
 /**
  * 用户服务实现类
@@ -169,6 +170,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyUser.setEmail(orignUser.getEmail());
         safetyUser.setUserRole(orignUser.getUserRole());
         safetyUser.setTags(orignUser.getTags());
+        safetyUser.setUserIds(orignUser.getUserIds());
         safetyUser.setUserStatus(orignUser.getUserStatus());
         safetyUser.setCreateTime(orignUser.getCreateTime());
         return safetyUser;
@@ -313,6 +315,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             finalUserList.add(userIdUserListMap.get(userId).get(0));
         }
         return finalUserList;
+    }
+
+    @Override
+    public List<User> getFriendsById(User currentUser) {
+        User loginUser = this.getById(currentUser.getId());
+        Set<Long> friendsId = stringJsonListToLongSet(loginUser.getUserIds());
+        return friendsId.stream().map(user -> this.getSafetyUser(this.getById(user))).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean deleteFriend(User currentUser, Long id) {
+        User loginUser = this.getById(currentUser.getId());
+        User friendUser = this.getById(id);
+        Set<Long> friendsId = stringJsonListToLongSet(loginUser.getUserIds());
+        Set<Long> fid = stringJsonListToLongSet(friendUser.getUserIds());
+        friendsId.remove(id);
+        fid.remove(loginUser.getId());
+        String friends = new Gson().toJson(friendsId);
+        String fids = new Gson().toJson(fid);
+        loginUser.setUserIds(friends);
+        friendUser.setUserIds(fids);
+        return this.updateById(loginUser) && this.updateById(friendUser);
     }
 
 

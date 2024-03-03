@@ -46,3 +46,35 @@ create table user_team
     isDelete   tinyint  default 0                 not null comment '是否删除'
 )
     comment '用户队伍关系';
+
+-- auto-generated definition
+create table friends
+(
+    id         bigint auto_increment comment '好友申请id'
+        primary key,
+    fromId     bigint                             not null comment '发送申请的用户id',
+    receiveId  bigint                             null comment '接收申请的用户id ',
+    isRead     tinyint  default 0                 not null comment '是否已读(0-未读 1-已读)',
+    status     tinyint  default 0                 not null comment '申请状态 默认0 （0-未通过 1-已同意 2-已过期 3-已撤销）',
+    createTime datetime default CURRENT_TIMESTAMP null comment '创建时间',
+    updateTime datetime default CURRENT_TIMESTAMP null,
+    isDelete   tinyint  default 0                 not null comment '是否删除',
+    remark     varchar(214)                       null comment '好友申请备注信息'
+)
+    comment '好友申请管理表' charset = utf8mb4;
+
+
+-- auto-generated definition
+create table chat
+(
+    id         bigint auto_increment comment '聊天记录id'
+        primary key,
+    fromId     bigint                                  not null comment '发送消息id',
+    toId       bigint                                  null comment '接收消息id',
+    text       varchar(512) collate utf8mb4_unicode_ci null,
+    chatType   tinyint                                 not null comment '聊天类型 1-私聊 2-群聊',
+    createTime datetime default CURRENT_TIMESTAMP      null comment '创建时间',
+    updateTime datetime default CURRENT_TIMESTAMP      null,
+    teamId     bigint                                  null
+)
+    comment '聊天消息表' charset = utf8mb4;

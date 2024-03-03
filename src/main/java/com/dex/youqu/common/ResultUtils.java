@@ -19,6 +19,10 @@ public class ResultUtils {
      * @return
      * @param <T>
      */
+    public static <T> BaseResponse<T> success(T data, String message) {
+        return new BaseResponse<>(0, data, message, "");
+    }
+
     public static <T> BaseResponse<T> success(T data){
         return new BaseResponse<>(0,data,"ok");
     }

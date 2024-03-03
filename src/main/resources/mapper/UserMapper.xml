@@ -19,6 +19,7 @@
             <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
             <result property="userRole" column="userRole" jdbcType="INTEGER"/>
             <result property="tags" column="tags" jdbcType="VARCHAR"/>
+            <result property="userIds" column="userIds" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -26,6 +27,6 @@
         avatarUrl,gender,userPassword,
         phone,email,userStatus,
         createTime,updateTime,isDelete,
-        userRole,tags
+        userRole,tags,userIds
     </sql>
 </mapper>
