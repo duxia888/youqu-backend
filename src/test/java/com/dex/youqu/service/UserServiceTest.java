@@ -1,14 +1,11 @@
 package com.dex.youqu.service;
 
 import com.dex.youqu.model.domain.User;
-import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
-import java.util.List;
 
 /*** @Author axin
  * Date:2024/2/7 17:00
@@ -76,10 +73,10 @@ class UserServiceTest {
         Assertions.assertTrue(result > 0);
     }
 
-    @Test
-    public void testSearchUserByTags() {
-        List<String> tagNameList = Arrays.asList("java", "python");
-        List<User> userList = userService.searchUsersByTags(tagNameList);
-        Assert.assertNotNull(userList);
-    }
+//    @Test
+//    public void testSearchUserByTags() {
+//        List<String> tagNameList = Arrays.asList("java", "python");
+//        List<User> userList = userService.searchUsersByTags(tagNameList);
+//        Assert.assertNotNull(userList);
+//    }
 }

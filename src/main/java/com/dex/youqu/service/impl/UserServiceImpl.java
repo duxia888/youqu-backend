@@ -1,11 +1,15 @@
 package com.dex.youqu.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dex.youqu.common.ErrorCode;
 import com.dex.youqu.exception.BusinessException;
 import com.dex.youqu.mapper.UserMapper;
 import com.dex.youqu.model.domain.User;
+import com.dex.youqu.model.request.UserQueryRequest;
+import com.dex.youqu.model.request.UserUpdatePassword;
 import com.dex.youqu.service.UserService;
 import com.dex.youqu.utils.AlgorithmUtils;
 import com.google.gson.Gson;
@@ -13,17 +17,20 @@ import com.google.gson.reflect.TypeToken;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.util.Pair;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.dex.youqu.contant.SystemConstant.PAGE_SIZE;
 import static com.dex.youqu.contant.UserConstant.ADMIN_ROLE;
 import static com.dex.youqu.contant.UserConstant.USER_LOGIN_STATE;
 import static com.dex.youqu.utils.StringUtils.stringJsonListToLongSet;
@@ -190,6 +197,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     /**
+     * 按标签搜索用户
+     * 根据标签搜索用户（内存过滤）
+     *
+     * @param tagNameList 用户要拥有的标签
+     * @param currentPage 当前页码
+     * @return {@link Page}<{@link User}>
+     */
+    @Override
+    public Page<User> searchUsersByTags(List<String> tagNameList, long currentPage) {
+        if (CollectionUtils.isEmpty(tagNameList)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        for (String tagName : tagNameList) {
+            userLambdaQueryWrapper = userLambdaQueryWrapper
+                    .or().like(Strings.isNotEmpty(tagName), User::getTags, tagName);
+        }
+        return page(new Page<>(currentPage, PAGE_SIZE), userLambdaQueryWrapper);
+    }
+
+    /**
      * 根据标签搜索用户 (内存过滤)
      *
      * @param tagNameList 用户要拥有的标签
@@ -252,6 +280,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             throw new BusinessException(ErrorCode.NO_AUTH);
         }
         return (User) userObj;
+    }
+
+    @Override
+    public void isLogin(HttpServletRequest request) {
+        if (request == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN, "请先登录");
+        }
+        Object objUser = request.getSession().getAttribute(USER_LOGIN_STATE);
+        User currentUser = (User) objUser;
+        if (currentUser == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN, "请先登录");
+        }
     }
 
     @Override
@@ -339,6 +379,105 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return this.updateById(loginUser) && this.updateById(friendUser);
     }
 
+    @Override
+    public List<User> userQuery(UserQueryRequest userQueryRequest, HttpServletRequest request) {
+        isLogin(request);
+        String searchText = userQueryRequest.getSearchText();
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.like(User::getUsername, searchText).or().like(User::getProfile, searchText);
+        return this.list(userLambdaQueryWrapper);
+    }
+
+    @Override
+    public List<User> searchFriend(UserQueryRequest userQueryRequest, User currentUser) {
+        String searchText = userQueryRequest.getSearchText();
+        User user = this.getById(currentUser.getId());
+        Set<Long> friendsId = stringJsonListToLongSet(user.getUserIds());
+        List<User> users = new ArrayList<>();
+        Collections.shuffle(users);
+        friendsId.forEach(id -> {
+            User u = this.getById(id);
+            if (u.getUsername().contains(searchText)) {
+                users.add(u);
+            }
+        });
+        return users;
+    }
+
+    /**
+     * 收到用户标签
+     *
+     * @param id id
+     * @return {@link List}<{@link String}>
+     */
+    @Override
+    public List<String> getUserTags(Long id) {
+        User user = this.getById(id);
+        String userTags = user.getTags();
+        Gson gson = new Gson();
+        return gson.fromJson(userTags, new TypeToken<List<String>>() {
+        }.getType());
+    }
+
+    /**
+     * 更新标记
+     *
+     * @param tags   标签
+     * @param userId 用户id
+     */
+    @Override
+    public void updateTags(List<String> tags, Long userId) {
+        User user = new User();
+        Gson gson = new Gson();
+        String tagsJson = gson.toJson(tags);
+        user.setId(userId);
+        user.setTags(tagsJson);
+        this.updateById(user);
+    }
+
+    @Override
+    public int updatePasswordById(UserUpdatePassword updatePassword, User currentUser) {
+        long id = updatePassword.getId();
+        String oldPassword = updatePassword.getOldPassword();
+        String newPassword = updatePassword.getNewPassword();
+        String checkPassword = updatePassword.getCheckPassword();
+        if (StringUtils.isAnyBlank(oldPassword, newPassword, checkPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "输入有误");
+        }
+        // 密码就不小于8位吧
+        if (oldPassword.length() < 8 || checkPassword.length() < 8 || newPassword.length() < 8) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码小于8位");
+        }
+        // 密码和校验密码相同
+        if (!newPassword.equals(checkPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "输入密码不一致");
+        }
+        if (!isAdmin(currentUser) && currentUser.getId() != id) {
+            throw new BusinessException(ErrorCode.NO_AUTH, "权限不足");
+        }
+
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + oldPassword).getBytes(StandardCharsets.UTF_8));
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        userQueryWrapper.eq("userAccount", currentUser.getUserAccount());
+        userQueryWrapper.eq("userPassword", encryptPassword);
+        User user = this.getOne(userQueryWrapper);
+        // 用户不存在
+        if (user == null) {
+            log.info("user login failed,userAccount cannot match userPassword");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码错误");
+        }
+
+        String newEncryptPassword = DigestUtils.md5DigestAsHex((SALT + newPassword).getBytes(StandardCharsets.UTF_8));
+
+        currentUser.setUserPassword(newEncryptPassword);
+
+        return userMapper.updateById(currentUser);
+    }
+
+    @Override
+    public String redisFormat(Long key) {
+        return String.format("youqu:user:search:%s", key);
+    }
 
     /**
      * 根据标签搜索用户 (SQL 查询版)

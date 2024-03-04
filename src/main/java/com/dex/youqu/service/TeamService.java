@@ -9,6 +9,7 @@ import com.dex.youqu.model.request.TeamQuitRequest;
 import com.dex.youqu.model.request.TeamUpdateRequest;
 import com.dex.youqu.model.vo.TeamUserVO;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -34,6 +35,14 @@ public interface TeamService extends IService<Team> {
      * @return 搜索后队伍列表
      */
     List<TeamUserVO> listTeams(TeamQuery teamQuery, boolean isAdmin);
+
+    /**
+     * 判断是否加入队伍，队伍人数
+     * @param teamList
+     * @param request
+     * @return
+     */
+    List<TeamUserVO> isTeamData(List<TeamUserVO> teamList, HttpServletRequest request);
 
     /**
      * 更新队伍
@@ -70,4 +79,6 @@ public interface TeamService extends IService<Team> {
      * @return
      */
     boolean deleteTeam(long id, User loginUser);
+
+
 }

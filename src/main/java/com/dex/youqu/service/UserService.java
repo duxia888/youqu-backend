@@ -1,7 +1,10 @@
 package com.dex.youqu.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.dex.youqu.model.domain.User;
+import com.dex.youqu.model.request.UserQueryRequest;
+import com.dex.youqu.model.request.UserUpdatePassword;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -52,12 +55,13 @@ public interface UserService extends IService<User> {
     int userLogout(HttpServletRequest request);
 
     /**
-     * 根据标签搜索用户
+     * 按标签搜索用户
      *
-     * @param tagNameList
-     * @return
+     * @param tagNameList 标记名称列表
+     * @param currentPage 当前页码
+     * @return {@link Page}<{@link User}>
      */
-    List<User> searchUsersByTags(List<String> tagNameList);
+    Page<User> searchUsersByTags(List<String> tagNameList, long currentPage);
 
     /**
      * 更新用户信息
@@ -72,6 +76,14 @@ public interface UserService extends IService<User> {
      * @return
      */
     User getLoginUser(HttpServletRequest request);
+
+    /**
+     * 当前是否登录
+     *
+     * @param request
+     * @return
+     */
+    void isLogin(HttpServletRequest request);
 
     /**
      * 是否为管理员
@@ -106,4 +118,55 @@ public interface UserService extends IService<User> {
     List<User> getFriendsById(User currentUser);
 
     boolean deleteFriend(User currentUser, Long id);
+
+    /**
+     * 搜索用户
+     *
+     * @param userQueryRequest
+     * @param request
+     * @return
+     */
+    List<User> userQuery(UserQueryRequest userQueryRequest, HttpServletRequest request);
+
+    /**
+     * 搜索好友
+     *
+     * @param userQueryRequest
+     * @param currentUser
+     * @return
+     */
+    List<User> searchFriend(UserQueryRequest userQueryRequest, User currentUser);
+
+    /**
+     * 收到用户标签
+     *
+     * @param id id
+     * @return {@link List}<{@link String}>
+     */
+    List<String> getUserTags(Long id);
+
+    /**
+     * 更新标记
+     *
+     * @param tags   标签
+     * @param userId 用户id
+     */
+    void updateTags(List<String> tags, Long userId);
+
+    /**
+     * 修改密码
+     *
+     * @param updatePassword
+     * @param currentUser
+     * @return
+     */
+    int updatePasswordById(UserUpdatePassword updatePassword, User currentUser);
+
+    /**
+     * redisKey
+     *
+     * @param key
+     * @return
+     */
+    String redisFormat(Long key);
 }

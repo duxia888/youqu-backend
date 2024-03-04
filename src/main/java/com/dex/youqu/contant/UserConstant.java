@@ -22,6 +22,8 @@ public interface UserConstant {
      */
     String TAGS_REDIS_KEY = String.format("youqu:tags:%s", "tags");
 
+    int NODELETE = 0;
+
     /**
      * 默认权限
      */

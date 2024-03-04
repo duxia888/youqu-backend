@@ -8,8 +8,13 @@ import com.dex.youqu.common.ResultUtils;
 import com.dex.youqu.exception.BusinessException;
 import com.dex.youqu.model.domain.User;
 import com.dex.youqu.model.request.UserLoginRequest;
+import com.dex.youqu.model.request.UserQueryRequest;
 import com.dex.youqu.model.request.UserRegisterRequest;
+import com.dex.youqu.model.request.UserUpdatePassword;
 import com.dex.youqu.service.UserService;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -123,13 +128,38 @@ public class UserController {
         return ResultUtils.success(list);
     }
 
-    @GetMapping("/search/tags")
-    public BaseResponse<List<User>> searchUsersByTags(@RequestParam(required = false) List<String> tagNameList) {
-        if (CollectionUtils.isEmpty(tagNameList)){
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+    @PostMapping("/search")
+    public BaseResponse<List<User>> userQuery(@RequestBody UserQueryRequest userQueryRequest, HttpServletRequest request) {
+        if (userQueryRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在");
         }
+        List<User> users = userService.userQuery(userQueryRequest, request);
+        return ResultUtils.success(users);
+    }
 
-        List<User> userList = userService.searchUsersByTags(tagNameList);
+    /**
+     * 按标签搜索用户
+     *
+     * @param tagNameList 标记名称列表
+     * @param currentPage 当前页面
+     * @param request     要求
+     * @return {@link BaseResponse}<{@link Page}<{@link User}>>
+     */
+    @GetMapping("/search/tags")
+    @ApiOperation(value = "通过标签搜索用户")
+    @ApiImplicitParams(
+            {@ApiImplicitParam(name = "tagNameList", value = "标签列表")})
+    public BaseResponse<Page<User>> searchUsersByTags(@RequestParam(required = false) List<String> tagNameList,
+                                                      long currentPage,
+                                                      HttpServletRequest request) {
+        if (CollectionUtils.isEmpty(tagNameList)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "标签不能为空");
+        }
+        User loginUser = userService.getLoginUser(request);
+        if (loginUser == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN);
+        }
+        Page<User> userList = userService.searchUsersByTags(tagNameList, currentPage);
         return ResultUtils.success(userList);
     }
 
@@ -166,6 +196,17 @@ public class UserController {
         //3.触发更新
         int result = userService.updateUser(user, loginUser);
         return ResultUtils.success(result);
+    }
+
+    @PostMapping("/update/password")
+    public BaseResponse<Integer> updatePassword(@RequestBody UserUpdatePassword updatePassword, HttpServletRequest request) {
+        if (updatePassword == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User currentUser = userService.getLoginUser(request);
+        int updateTag = userService.updatePasswordById(updatePassword, currentUser);
+        redisTemplate.delete(userService.redisFormat(currentUser.getId()));
+        return ResultUtils.success(updateTag);
     }
 
     @PostMapping("/delete")
@@ -212,5 +253,55 @@ public class UserController {
         User currentUser = userService.getLoginUser(request);
         boolean deleteFriend = userService.deleteFriend(currentUser, id);
         return ResultUtils.success(deleteFriend);
+    }
+
+    @PostMapping("/searchFriend")
+    public BaseResponse<List<User>> searchFriend(@RequestBody UserQueryRequest userQueryRequest, HttpServletRequest request) {
+        if (userQueryRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在");
+        }
+        User currentUser = userService.getLoginUser(request);
+        List<User> searchFriend = userService.searchFriend(userQueryRequest, currentUser);
+        return ResultUtils.success(searchFriend);
+    }
+
+    /**
+     * 获取用户标签
+     *
+     * @param request 请求
+     * @return {@link BaseResponse}<{@link List}<{@link String}>>
+     */
+    @GetMapping("/tags")
+    @ApiOperation(value = "获取当前用户标签")
+    @ApiImplicitParams(
+            {@ApiImplicitParam(name = "request", value = "request请求")})
+    public BaseResponse<List<String>> getUserTags(HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        if (loginUser == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN);
+        }
+        List<String> userTags = userService.getUserTags(loginUser.getId());
+        return ResultUtils.success(userTags);
+    }
+
+    /**
+     * 更新用户标签
+     *
+     * @param tags    标签
+     * @param request 请求
+     * @return {@link BaseResponse}<{@link String}>
+     */
+    @PutMapping("/update/tags")
+    @ApiOperation(value = "更新用户标签")
+    @ApiImplicitParams(
+            {@ApiImplicitParam(name = "tags", value = "标签"),
+                    @ApiImplicitParam(name = "request", value = "request请求")})
+    public BaseResponse<String> updateUserTags(@RequestBody List<String> tags, HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        if (loginUser == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN);
+        }
+        userService.updateTags(tags, loginUser.getId());
+        return ResultUtils.success("ok");
     }
 }

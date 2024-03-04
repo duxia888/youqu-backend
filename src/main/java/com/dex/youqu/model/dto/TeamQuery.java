@@ -58,4 +58,9 @@ public class TeamQuery extends PageRequest {
      * 0 - 公开，1 - 私有，2 - 加密
      */
     private Integer status;
+
+    /**
+     * 是否拥有查看自己队伍的权限
+     */
+    private boolean selectTeam = false;
 }
