@@ -34,14 +34,7 @@ public final class SystemConstant {
      * 最长登录空闲时间
      */
     public static final int MAXIMUM_LOGIN_IDLE_TIME = 900;
-    /**
-     * 最大验证码
-     */
-    public static final int MAXIMUM_VERIFICATION_CODE_NUM = 999999;
-    /**
-     * 最小验证码
-     */
-    public static final int MINIMUM_VERIFICATION_CODE_NUM = 100000;
+
     /**
      * 跨域允许时间
      */

@@ -1,7 +1,5 @@
 package com.dex.youqu.model.request;
 
-// 本项目_所属 [程序员鱼皮](https://github.com/liyupi)
-
 import lombok.Data;
 
 import java.io.Serializable;

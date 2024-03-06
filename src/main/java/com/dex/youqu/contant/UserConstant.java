@@ -2,7 +2,7 @@ package com.dex.youqu.contant;
 
 /**
  * @author: axin
- * @Date: 2024年03月18日 21:54
+ * @Date: 2024年02月18日 21:54
  * @Version: 1.0
  * @Description: 用户常量
  */
