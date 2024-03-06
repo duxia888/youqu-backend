@@ -20,10 +20,10 @@ public interface ChatConstant {
      */
     int HALL_CHAT = 3;
 
-    String CACHE_CHAT_HALL = "jujiaoyuan:chat:chat_records:chat_hall";
+    String CACHE_CHAT_HALL = "youqu:chat:chat_records:chat_hall";
 
-    String CACHE_CHAT_PRIVATE = "jujiaoyuan:chat:chat_records:chat_private";
+    String CACHE_CHAT_PRIVATE = "youqu:chat:chat_records:chat_private";
 
-    String CACHE_CHAT_TEAM = "jujiaoyuan:chat:chat_records:chat_team";
+    String CACHE_CHAT_TEAM = "youqu:chat:chat_records:chat_team";
 
 }

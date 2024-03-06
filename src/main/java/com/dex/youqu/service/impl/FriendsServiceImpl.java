@@ -59,7 +59,7 @@ public class FriendsServiceImpl extends ServiceImpl<FriendsMapper, Friends> impl
         if (loginUser.getId() == friendAddRequest.getReceiveId()) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "不能添加自己为好友");
         }
-        RLock lock = redissonClient.getLock("jujiaoyuan:apply");
+        RLock lock = redissonClient.getLock("youqu:apply");
         try {
             // 抢到锁并执行
             if (lock.tryLock(0, -1, TimeUnit.MILLISECONDS)) {

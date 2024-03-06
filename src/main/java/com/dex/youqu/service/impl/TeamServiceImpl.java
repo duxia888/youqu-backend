@@ -94,10 +94,20 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             }
         }
         // 6. 超时时间 > 当前时间
-        Date expireTime = team.getExpireTime();
-        if (new Date().after(expireTime)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "超时时间 > 当前时间");
+//        Date expireTime = team.getExpireTime();
+        if (team.getExpireTime() != null) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(team.getExpireTime());
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            team.setExpireTime(calendar.getTime());
+        } else {
+            team.setExpireTime(null);
         }
+//        if (new Date().after(team.getExpireTime())) {
+//            throw new BusinessException(ErrorCode.PARAMS_ERROR, "超时时间 > 当前时间");
+//        }
         // 7. 校验用户最多创建 5 个队伍
         // todo 有 bug，可能同时创建 100 个队伍
         QueryWrapper<Team> queryWrapper = new QueryWrapper<>();
@@ -179,7 +189,8 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         queryWrapper.and(qw -> qw.gt("expireTime", new Date()).or().isNull("expireTime"));
         List<Team> teamList = this.list(queryWrapper);
         if (CollectionUtils.isEmpty(teamList)) {
-            return new ArrayList<>();
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+//            return new ArrayList<>();
         }
         List<TeamUserVO> teamUserVOList = new ArrayList<>();
         // 关联查询创建人的用户信息

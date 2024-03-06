@@ -21,6 +21,7 @@ import com.dex.youqu.service.UserService;
 import com.dex.youqu.service.UserTeamService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -184,6 +185,9 @@ public class TeamController {
         QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userId", loginUser.getId());
         List<UserTeam> userTeamList = userTeamService.list(queryWrapper);
+        if (CollectionUtils.isEmpty(userTeamList)) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
         // 取出不重复的队伍 id
         // teamId userId
         // 1, 2

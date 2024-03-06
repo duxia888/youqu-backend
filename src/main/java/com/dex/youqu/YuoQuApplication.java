@@ -1,12 +1,11 @@
 package com.dex.youqu;
 
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@MapperScan("com.dex.youqu.mapper")
+//@MapperScan("com.dex.youqu.mapper")
 @EnableScheduling
 public class YuoQuApplication {
 
