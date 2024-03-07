@@ -1,4 +1,7 @@
--- auto-generated definition
+-- ----------------------------
+-- Table structure for user
+-- ----------------------------
+DROP TABLE IF EXISTS `user`;
 create table user
 (
     id           bigint auto_increment comment 'id'
@@ -7,6 +10,7 @@ create table user
     userAccount  varchar(256)                       null comment '账号',
     avatarUrl    varchar(1024)                      null comment '头像',
     gender       tinyint                            null comment '性别',
+    profile      varchar(512)                       null comment '个人简介',
     userPassword varchar(512)                       not null comment '密码',
     phone        varchar(128)                       null comment '电话',
     email        varchar(512)                       null comment '邮箱',
@@ -14,9 +18,15 @@ create table user
     createTime   datetime default CURRENT_TIMESTAMP null comment '创建时间',
     updateTime   datetime default CURRENT_TIMESTAMP null comment '更新时间',
     isDelete     tinyint  default 0                 not null comment '是否删除',
-    userRole     int      default 0                 not null comment '用户角色 0 - 普通用户 1 - 管理员'
+    userRole     int      default 0                 not null comment '用户角色 0 - 普通用户 1 - 管理员',
+    tags         varchar(1024)                      null comment '标签 json 列表',
+    userIds      varchar(512)                       null comment '添加的好友'
 );
 
+-- ----------------------------
+-- Table structure for team
+-- ----------------------------
+DROP TABLE IF EXISTS `team`;
 create table team
 (
     id          bigint auto_increment comment 'id'
@@ -34,6 +44,10 @@ create table team
 )
     comment '队伍';
 
+-- ----------------------------
+-- Table structure for user_team
+-- ----------------------------
+DROP TABLE IF EXISTS `user_team`;
 create table user_team
 (
     id         bigint auto_increment comment 'id'
@@ -47,7 +61,10 @@ create table user_team
 )
     comment '用户队伍关系';
 
--- auto-generated definition
+-- ----------------------------
+-- Table structure for friends
+-- ----------------------------
+DROP TABLE IF EXISTS `friends`;
 create table friends
 (
     id         bigint auto_increment comment '好友申请id'
@@ -61,10 +78,13 @@ create table friends
     isDelete   tinyint  default 0                 not null comment '是否删除',
     remark     varchar(214)                       null comment '好友申请备注信息'
 )
-    comment '好友申请管理表' charset = utf8mb4;
+    comment '好友申请管理表';
 
 
--- auto-generated definition
+-- ----------------------------
+-- Table structure for chat
+-- ----------------------------
+DROP TABLE IF EXISTS `chat`;
 create table chat
 (
     id         bigint auto_increment comment '聊天记录id'
@@ -77,4 +97,4 @@ create table chat
     updateTime datetime default CURRENT_TIMESTAMP      null,
     teamId     bigint                                  null
 )
-    comment '聊天消息表' charset = utf8mb4;
+    comment '聊天消息表';
