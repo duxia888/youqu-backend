@@ -22,7 +22,7 @@ spring:
     database: 1
     password: '123456' #redis的密码，没有设置密码的这行可以注释
   jackson:
-    date-format: yyyy年MM月dd日 HH:mm:ss
+    date-format: yyyy-MM-dd
     timeZone: Asia/Shanghai
 server:
   port: 8080

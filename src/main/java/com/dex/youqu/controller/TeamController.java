@@ -16,6 +16,7 @@ import com.dex.youqu.model.request.TeamJoinRequest;
 import com.dex.youqu.model.request.TeamQuitRequest;
 import com.dex.youqu.model.request.TeamUpdateRequest;
 import com.dex.youqu.model.vo.TeamUserVO;
+import com.dex.youqu.model.vo.TeamVo;
 import com.dex.youqu.service.TeamService;
 import com.dex.youqu.service.UserService;
 import com.dex.youqu.service.UserTeamService;
@@ -90,6 +91,15 @@ public class TeamController {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新失败");
         }
         return ResultUtils.success(true);
+    }
+
+    @GetMapping("/{teamId}")
+    public BaseResponse<TeamVo> getUsersByTeamId(@PathVariable("teamId") Long teamId, HttpServletRequest request) {
+        if (teamId == null || teamId <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "该用户暂未加入队伍");
+        }
+        TeamVo teams = teamService.getUsersByTeamId(teamId, request);
+        return ResultUtils.success(teams);
     }
 
     @GetMapping("/list")

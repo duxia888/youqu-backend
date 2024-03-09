@@ -8,6 +8,7 @@ import com.dex.youqu.model.request.TeamJoinRequest;
 import com.dex.youqu.model.request.TeamQuitRequest;
 import com.dex.youqu.model.request.TeamUpdateRequest;
 import com.dex.youqu.model.vo.TeamUserVO;
+import com.dex.youqu.model.vo.TeamVo;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -80,5 +81,22 @@ public interface TeamService extends IService<Team> {
      */
     boolean deleteTeam(long id, User loginUser);
 
+    /**
+     * 根据队伍id获取队伍
+     *
+     * @param teamId
+     * @param request
+     * @return
+     */
+    TeamVo getUsersByTeamId(Long teamId, HttpServletRequest request);
 
+
+//    /**
+//     * 解散队伍
+//     *
+//     * @param teamId
+//     * @param request
+//     * @return
+//     */
+//    boolean dissolutionTeam(Long teamId, HttpServletRequest request);
 }

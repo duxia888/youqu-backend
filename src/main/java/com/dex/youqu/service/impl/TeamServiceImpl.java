@@ -1,5 +1,6 @@
 package com.dex.youqu.service.impl;
 
+import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dex.youqu.common.ErrorCode;
@@ -14,6 +15,7 @@ import com.dex.youqu.model.request.TeamJoinRequest;
 import com.dex.youqu.model.request.TeamQuitRequest;
 import com.dex.youqu.model.request.TeamUpdateRequest;
 import com.dex.youqu.model.vo.TeamUserVO;
+import com.dex.youqu.model.vo.TeamVo;
 import com.dex.youqu.model.vo.UserVO;
 import com.dex.youqu.service.TeamService;
 import com.dex.youqu.service.UserService;
@@ -23,6 +25,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +55,10 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
 
     @Resource
     private RedissonClient redissonClient;
+
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
+
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -109,12 +117,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
 //            throw new BusinessException(ErrorCode.PARAMS_ERROR, "超时时间 > 当前时间");
 //        }
         // 7. 校验用户最多创建 5 个队伍
-        // todo 有 bug，可能同时创建 100 个队伍
-        QueryWrapper<Team> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userId", userId);
-        long hasTeamNum = this.count(queryWrapper);
+        long hasTeamNum = userTeamService.count(queryWrapper);
         if (hasTeamNum >= 5) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户最多创建 5 个队伍");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户最多创建加入 5 个队伍");
         }
         // 8. 插入队伍信息到队伍表
         team.setId(null);
@@ -416,6 +423,93 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         return this.removeById(teamId);
     }
 
+    @Override
+    public TeamVo getUsersByTeamId(Long teamId, HttpServletRequest request) {
+        // 当前用户是否登录
+        User loginUser = userService.getLoginUser(request);
+        User user = userService.getById(loginUser.getId());
+        // 当前当前队伍的用户
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("teamId",teamId);
+        List<UserTeam> userIdList = userTeamService.list(queryWrapper);
+        Set<Long> userUserIdSet = userIdList.stream().map(UserTeam::getUserId).collect(Collectors.toSet());
+        // 当前用户加入的队伍id
+        queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userId",user.getId());
+        List<UserTeam> userTeamIdList = userTeamService.list(queryWrapper);
+        Set<Long> userTeamIdSet = userTeamIdList.stream().map(UserTeam::getTeamId).collect(Collectors.toSet());
+        Team team = this.getById(teamId);
+        // 创建队伍者id
+        Long userId = team.getUserId();
+
+        Long tid = team.getId();
+        String teamName = team.getName();
+        String description = team.getDescription();
+        Integer maxNum = team.getMaxNum();
+        Date expireTime = team.getExpireTime();
+        Integer teamStatus = team.getStatus();
+        Date createTime = team.getCreateTime();
+
+        // 当前用户不是管理员
+        // 当前用户加入的队伍的ids中不包含传过来的队伍id
+        // 当前用户的id不等于队伍的创建者id 说明没权限
+        boolean noPermissions = !userService.isAdmin(loginUser) && !userTeamIdSet.contains(teamId) && loginUser.getId() != userId;
+        if (noPermissions) {
+            throw new BusinessException(ErrorCode.NO_AUTH, "暂无权限查看");
+        }
+        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+        String teamIdKey = String.format("youqu:team:getUsersByTeamId:%s", teamId);
+        TeamVo teams = (TeamVo) valueOperations.get(teamIdKey);
+        if (teams != null) {
+            return teams;
+        }
+
+        Set<User> users = new HashSet<>();
+        for (Long id : userUserIdSet) {
+            users.add(userService.getById(id));
+        }
+        users = users.stream().map(userService::getSafetyUser).collect(Collectors.toSet());
+
+        User createTeamUser = userService.getById(userId);
+        User safetyUser = userService.getSafetyUser(createTeamUser);
+        TeamVo teamVo = new TeamVo();
+        teamVo.setId(tid);
+        teamVo.setTeamName(teamName);
+        teamVo.setDescription(description);
+        teamVo.setMaxNum(maxNum);
+        teamVo.setExpireTime(expireTime);
+        teamVo.setTeamStatus(teamStatus);
+        teamVo.setCreateTime(createTime);
+        teamVo.setUser(safetyUser);
+        teamVo.setUserSet(users);
+        setRedis(teamIdKey, teamVo);
+        return teamVo;
+    }
+
+//    @Override
+//    @Transactional(rollbackFor = Exception.class)
+//    public boolean dissolutionTeam(Long teamId, HttpServletRequest request) {
+//        User loginUser = userService.getLoginUser(request);
+//        Team team = this.getById(teamId);
+//        if (!userService.isAdmin(loginUser) && loginUser.getId() != team.getUserId()) {
+//            throw new BusinessException(ErrorCode.NOT_LOGIN, "暂无权限");
+//        }
+//        List<User> users = userService.list();
+//        users.forEach(user -> {
+//            Set<Long> teamIds = stringJsonListToLongSet(user.getTeamIds());
+//            teamIds.remove(team.getId());
+//            user.setTeamIds(new Gson().toJson(teamIds));
+//            userService.updateById(user);
+//        });
+//        boolean dissolutionTeam = this.removeById(team);
+//        if (dissolutionTeam) {
+//            String teamIdKey = String.format("jujiaoyuan:team:getUsersByTeamId:%s", teamId);
+//            deleteRedisKey(teamIdKey);
+//            redisTemplate.delete(userService.redisFormat(loginUser.getId()));
+//        }
+//        return dissolutionTeam;
+//    }
+
     /**
      * 根据 id 获取队伍信息
      *
@@ -443,6 +537,23 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
         userTeamQueryWrapper.eq("teamId", teamId);
         return userTeamService.count(userTeamQueryWrapper);
+    }
+
+    /**
+     * 设置 redis 2-4分钟
+     *
+     * @param redisKey
+     * @param data
+     */
+    private void setRedis(String redisKey, Object data) {
+        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+        try {
+            // 解决缓存雪崩
+            int i = RandomUtil.randomInt(1, 3);
+            valueOperations.set(redisKey, data, 1 + i % 10, TimeUnit.MINUTES);
+        } catch (Exception e) {
+            log.error("redis set key error");
+        }
     }
 }
 
