@@ -27,7 +27,7 @@ public interface UserService extends IService<User> {
      * @return 新用户id
      */
 
-    long userRegister(String userAccount, String userPassword, String checkPassword);
+    long userRegister(String userAccount, String username, String userPassword, String checkPassword);
 
     /**
      * 用户登录

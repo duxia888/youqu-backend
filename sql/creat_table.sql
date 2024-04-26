@@ -21,7 +21,8 @@ create table user
     userRole     int      default 0                 not null comment '用户角色 0 - 普通用户 1 - 管理员',
     tags         varchar(1024)                      null comment '标签 json 列表',
     userIds      varchar(512)                       null comment '添加的好友'
-);
+)
+    comment '用户';
 
 -- ----------------------------
 -- Table structure for team
